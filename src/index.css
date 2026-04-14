@@ -1,0 +1,240 @@
+@import 'tailwindcss';
+
+/* Плавность для всего */
+* {
+	transition: background-color 0.2s ease;
+}
+
+body {
+	font-family:
+		system-ui,
+		-apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Кастомный скроллбар */
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: #1f2937;
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #4b5563;
+	border-radius: 4px;
+	transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #6b7280;
+}
+
+* {
+	scrollbar-width: thin;
+	scrollbar-color: #4b5563 #1f2937;
+}
+
+aside ::-webkit-scrollbar {
+	width: 6px;
+}
+
+aside ::-webkit-scrollbar-track {
+	background: #111827;
+}
+
+aside ::-webkit-scrollbar-thumb {
+	background: #374151;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+	width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+	background: #111827;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+	background: #374151;
+	border-radius: 3px;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 640px) {
+	button,
+	input,
+	select,
+	textarea {
+		min-height: 44px;
+	}
+
+	input,
+	select,
+	textarea {
+		font-size: 16px;
+	}
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	* {
+		transition-duration: 0.2s;
+		transition-timing-function: ease-out;
+	}
+}
+
+/* --- ТЕМЫ ОФОРМЛЕНИЯ --- */
+
+/* По умолчанию (Синяя) */
+:root {
+	--color-primary: #3b82f6; /* blue-500 */
+	--color-primary-hover: #2563eb; /* blue-600 */
+	--color-primary-light: #60a5fa; /* blue-400 */
+}
+
+/* --- ИСПРАВЛЕНИЕ ТЕМ (Перекрашиваем синие кнопки) --- */
+
+/* ЗЕЛЕНАЯ ТЕМА */
+.theme-green .bg-blue-600 {
+	background-color: #16a34a !important;
+}
+.theme-green .bg-blue-500 {
+	background-color: #22c55e !important;
+}
+.theme-green .hover\:bg-blue-700:hover {
+	background-color: #15803d !important;
+}
+.theme-green .hover\:bg-blue-600:hover {
+	background-color: #16a34a !important;
+}
+.theme-green .bg-blue-500\/20 {
+	background-color: rgba(34, 197, 94, 0.2) !important;
+}
+.theme-green .text-blue-400 {
+	color: #4ade80 !important;
+}
+.theme-green .ring-blue-500 {
+	--tw-ring-color: #22c55e !important;
+}
+
+/* ФИОЛЕТОВАЯ ТЕМА */
+.theme-purple .bg-blue-600 {
+	background-color: #9333ea !important;
+}
+.theme-purple .bg-blue-500 {
+	background-color: #a855f7 !important;
+}
+.theme-purple .hover\:bg-blue-700:hover {
+	background-color: #7e22ce !important;
+}
+.theme-purple .hover\:bg-blue-600:hover {
+	background-color: #9333ea !important;
+}
+.theme-purple .bg-blue-500\/20 {
+	background-color: rgba(168, 85, 247, 0.2) !important;
+}
+.theme-purple .text-blue-400 {
+	color: #c084fc !important;
+}
+.theme-purple .ring-blue-500 {
+	--tw-ring-color: #a855f7 !important;
+}
+
+/* КРАСНАЯ ТЕМА */
+.theme-red .bg-blue-600 {
+	background-color: #dc2626 !important;
+}
+.theme-red .bg-blue-500 {
+	background-color: #ef4444 !important;
+}
+.theme-red .hover\:bg-blue-700:hover {
+	background-color: #b91c1c !important;
+}
+.theme-red .hover\:bg-blue-600:hover {
+	background-color: #dc2626 !important;
+}
+.theme-red .bg-blue-500\/20 {
+	background-color: rgba(239, 68, 68, 0.2) !important;
+}
+.theme-red .text-blue-400 {
+	color: #f87171 !important;
+}
+.theme-red .ring-blue-500 {
+	--tw-ring-color: #ef4444 !important;
+}
+
+/* ОРАНЖЕВАЯ ТЕМА */
+.theme-orange .bg-blue-600 {
+	background-color: #ea580c !important;
+}
+.theme-orange .bg-blue-500 {
+	background-color: #f97316 !important;
+}
+.theme-orange .hover\:bg-blue-700:hover {
+	background-color: #c2410c !important;
+}
+.theme-orange .hover\:bg-blue-600:hover {
+	background-color: #ea580c !important;
+}
+.theme-orange .bg-blue-500\/20 {
+	background-color: rgba(249, 115, 22, 0.2) !important;
+}
+.theme-orange .text-blue-400 {
+	color: #fb923c !important;
+}
+.theme-orange .ring-blue-500 {
+	--tw-ring-color: #f97316 !important;
+}
+
+/* Компактный режим */
+.compact-mode .p-4 {
+	padding: 0.75rem !important;
+}
+.compact-mode .p-5 {
+	padding: 0.75rem !important;
+}
+.compact-mode .p-6 {
+	padding: 1rem !important;
+}
+.compact-mode .gap-4 {
+	gap: 0.75rem !important;
+}
+.compact-mode .space-y-4 > * + * {
+	margin-top: 0.75rem !important;
+}
+.compact-mode .text-xl {
+	font-size: 1.125rem !important;
+}
+.compact-mode .text-2xl {
+	font-size: 1.25rem !important;
+}
+
+/* Компактный режим */
+.compact-mode .p-4 {
+	padding: 0.75rem;
+}
+.compact-mode .p-5 {
+	padding: 0.75rem;
+}
+.compact-mode .p-6 {
+	padding: 1rem;
+}
+.compact-mode .gap-4 {
+	gap: 0.75rem;
+}
+.compact-mode .space-y-4 > * + * {
+	margin-top: 0.75rem;
+}
+.compact-mode .text-xl {
+	font-size: 1.125rem;
+}
+.compact-mode .text-2xl {
+	font-size: 1.25rem;
+}

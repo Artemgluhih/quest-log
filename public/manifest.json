@@ -1,0 +1,16 @@
+{
+	"name": "QuestLog",
+	"short_name": "QuestLog",
+	"description": "Твой трекер задач в стиле RPG",
+	"theme_color": "#111827",
+	"background_color": "#111827",
+	"display": "standalone",
+	"start_url": "/",
+	"icons": [
+		{
+			"src": "icon.svg",
+			"sizes": "any",
+			"type": "image/svg+xml"
+		}
+	]
+}
