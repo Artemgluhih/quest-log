@@ -1,6 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ACHIEVEMENTS } from '../utils/achievements'
-import emailjs from '@emailjs/browser'
 
 export default function Settings({
 	theme,
@@ -100,118 +99,107 @@ export default function Settings({
 
 // === Вкладка: Профиль ===
 function ProfileTab() {
-  const [avatar, setAvatar] = useState(null)
-  const [avatarPreview, setAvatarPreview] = useState(null)
-  const [name, setName] = useState('User')
-  const [email, setEmail] = useState('')
-  const [isEmailVerified, setIsEmailVerified] = useState(false)
-  const [verificationCode, setVerificationCode] = useState('')
-  const [showVerification, setShowVerification] = useState(false)
-  const [sentCode, setSentCode] = useState('')
+	const [avatar, setAvatar] = useState(null)
+	const [avatarPreview, setAvatarPreview] = useState(null)
+	const [name, setName] = useState('User')
+	const [email, setEmail] = useState('')
+	const [isEmailVerified, setIsEmailVerified] = useState(false)
+	const [verificationCode, setVerificationCode] = useState('')
+	const [showVerification, setShowVerification] = useState(false)
+	const [sentCode, setSentCode] = useState('')
 
-  // Загрузка данных при монтировании
-  useEffect(() => {
-    const saved = localStorage.getItem('questLog_profile')
-    if (saved) {
-      const profile = JSON.parse(saved)
-      setName(profile.name || 'User')
-      setEmail(profile.email || '')
-      setAvatar(profile.avatar || null)
-      setAvatarPreview(profile.avatar || null)
-      setIsEmailVerified(profile.isEmailVerified || false)
-    }
-  }, [])
+	// Загрузка данных при монтировании
+	useEffect(() => {
+		const saved = localStorage.getItem('questLog_profile')
+		if (saved) {
+			const profile = JSON.parse(saved)
+			setName(profile.name || 'User')
+			setEmail(profile.email || '')
+			setAvatar(profile.avatar || null)
+			setAvatarPreview(profile.avatar || null)
+			setIsEmailVerified(profile.isEmailVerified || false)
+		}
+	}, [])
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert('Файл слишком большой. Максимум 2MB')
-        return
-      }
-      
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setAvatar(reader.result)
-        setAvatarPreview(reader.result)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
+	const handleAvatarChange = e => {
+		const file = e.target.files[0]
+		if (file) {
+			if (file.size > 2 * 1024 * 1024) {
+				alert('Файл слишком большой. Максимум 2MB')
+				return
+			}
 
-  const handleSendCode = async () => {
-    if (!email || !email.includes('@')) {
-      alert('Введите корректный email')
-      return
-    }
-    
-    // Генерация кода
-const handleSendCode = async () => {
-  const code = Math.floor(100000 + Math.random() * 900000).toString()
-    
-    // ОТПРАВКА EMAIL ЧЕРЕЗ EMAILJS (бесплатно до 200 писем/месяц)
+			const reader = new FileReader()
+			reader.onloadend = () => {
+				setAvatar(reader.result)
+				setAvatarPreview(reader.result)
+			}
+			reader.readAsDataURL(file)
+		}
+	}
+
+	const handleSendCode = async () => {
+		if (!email || !email.includes('@')) {
+			alert('Введите корректный email')
+			return
+		}
+
+		// Генерация кода
+		const code = Math.floor(100000 + Math.random() * 900000).toString()
+		setSentCode(code)
+		setShowVerification(true)
+
+		// ВРЕМЕННО: показываем код в alert
+		// Когда настроишь EmailJS или Supabase - раскомментируй:
+		/*
     try {
-      // 1. Зарегистрируйся на https://www.emailjs.com/
-      // 2. Создай сервис (Gmail или другой)
-      // 3. Создай шаблон письма с переменными {{code}}
-      // 4. Установи: npm install @emailjs/browser
-      // 5. Раскомментируй этот код:
-      
       await emailjs.send(
-        'service_s2yekjd',
-        'Ytemplate_w3fzht9',
+        'YOUR_SERVICE_ID',
+        'YOUR_TEMPLATE_ID',
         {
           to_email: email,
           code: code
         },
-        'LGUyK-S-41ICVcsYP'
+        'YOUR_PUBLIC_KEY'
       )
-    
-      
-      // ВРЕМЕННО: показываем код в alert
-      alert(`Код подтверждения: ${code}\n(Отправлен на ${email})`)
-      
+      alert(`Код отправлен на ${email}`)
     } catch (error) {
-      console.error('Ошибка отправки:', error)
-      alert('Не удалось отправить код. Попробуйте позже.')
+      alert('Ошибка отправки: ' + error.text)
     }
-  }
+    */
 
-  const handleVerifyEmail = () => {
-    if (verificationCode === sentCode) {
-      setIsEmailVerified(true)
-      setShowVerification(false)
-      alert('✅ Email подтвержден!')
-    } else {
-      alert('❌ Неверный код')
-    }
-  }
+		alert(`Код подтверждения: ${code}\n(Отправлен на ${email})`)
+	}
 
-  const handleSave = () => {
-    const profileData = {
-      name,
-      email,
-      avatar,
-      isEmailVerified,
-      updatedAt: new Date().toISOString()
-    }
-    
-    localStorage.setItem('questLog_profile', JSON.stringify(profileData))
-    alert('✅ Профиль сохранен!')
-    
-    // Если используешь Supabase, можешь сохранить туда тоже:
-    // await supabase.from('profiles').upsert(profileData)
-  }
+	const handleVerifyEmail = () => {
+		if (verificationCode === sentCode) {
+			setIsEmailVerified(true)
+			setShowVerification(false)
+			alert('✅ Email подтвержден!')
+		} else {
+			alert('❌ Неверный код')
+		}
+	}
 
-  const handleRemoveAvatar = () => {
-    setAvatar(null)
-    setAvatarPreview(null)
-  }
+	const handleSave = () => {
+		const profileData = {
+			name,
+			email,
+			avatar,
+			isEmailVerified,
+			updatedAt: new Date().toISOString(),
+		}
 
-  return (
-    // ... (тот же JSX код что был выше)
-  )
-} (
+		localStorage.setItem('questLog_profile', JSON.stringify(profileData))
+		alert('✅ Профиль сохранен!')
+	}
+
+	const handleRemoveAvatar = () => {
+		setAvatar(null)
+		setAvatarPreview(null)
+	}
+
+	return (
 		<div className='bg-gray-800 rounded-xl border border-gray-700 p-6'>
 			<h3 className='text-lg font-bold text-white mb-6'>👤 Профиль</h3>
 
@@ -315,7 +303,9 @@ const handleSendCode = async () => {
 							<input
 								type='text'
 								value={verificationCode}
-								onChange={e => setVerificationCode(e.target.value)}
+								onChange={e =>
+									setVerificationCode(e.target.value.replace(/\D/g, ''))
+								}
 								className='flex-1 bg-gray-700 text-white px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-center tracking-widest'
 								placeholder='000000'
 								maxLength='6'
