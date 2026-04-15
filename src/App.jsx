@@ -25,6 +25,7 @@ import ThemeSelector from './components/ThemeSelector'
 import Achievements from './components/Achievements'
 import LoginScreen from './components/LoginScreen'
 import Settings from './components/Settings'
+import FinanceView from './components/finance/FinanceView'
 
 function App() {
 	const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -163,7 +164,7 @@ function App() {
 		const stats = {
 			totalTasks: tasks.length,
 			completedTasks: tasks.filter(t => t.completed).length,
-			totalProjects: Object.keys(projects).length,
+			totalProjects: projects.length,
 			level:
 				Math.floor(
 					tasks
@@ -195,9 +196,16 @@ function App() {
 	}, [tasks, projects, unlockedAchievements, isLoadingDB])
 
 	const addTask = async newTask => {
-		if (!newTask.projectId) return
+		if (!newTask.projectId) {
+			alert('Выберите проект!')
+			return
+		}
+
 		const proj = projects.find(p => p.id === newTask.projectId)
-		if (!proj) return
+		if (!proj) {
+			alert('Проект не найден!')
+			return
+		}
 
 		const autoP = calculateAutoPriority(newTask)
 		const diff = suggestDifficulty(newTask.title, newTask.description || '')
@@ -221,10 +229,12 @@ function App() {
 		}
 
 		try {
+			console.log('📝 Добавляем задачу:', taskData)
 			await addTaskToDB(taskData)
 			setTasks(prev => [taskData, ...prev])
+			console.log('✅ Задача добавлена!')
 		} catch (err) {
-			console.error('❌ Ошибка:', err)
+			console.error('❌ Ошибка при добавлении задачи:', err)
 			alert('Не удалось создать задачу: ' + err.message)
 		}
 	}
@@ -244,6 +254,7 @@ function App() {
 	const toggleTask = async id => {
 		const task = tasks.find(t => t.id === id)
 		if (!task) return
+
 		const updated = {
 			...task,
 			completed: !task.completed,
@@ -395,9 +406,11 @@ function App() {
 				isOpen={sidebarOpen}
 				onClose={() => setSidebarOpen(false)}
 				onOpenSettings={handleOpenSettings}
+				onOpenFinance={() => setViewMode('finance')}
 			/>
 
 			<div className='flex-1 flex flex-col h-screen overflow-hidden relative'>
+				{/* 🔥 ШАПКА С ВОССТАНОВЛЕННЫМ ЗАГОЛОВКОМ ФИНАНСОВ */}
 				<header
 					className={`bg-gray-800 dark:bg-gray-800 border-b border-gray-700 p-4 flex justify-between items-center z-10 shadow-sm ${hasOverdue ? 'mt-7' : ''}`}
 				>
@@ -418,6 +431,7 @@ function App() {
 									projects.find(p => p.id === activeProjectId).name
 								: ''}
 							{viewMode === 'settings' && '⚙️ Настройки'}
+							{viewMode === 'finance' && '💰 Финансы'}
 						</h2>
 					</div>
 
@@ -436,84 +450,90 @@ function App() {
 					</div>
 				</header>
 
-				<div className='flex-1 overflow-hidden flex'>
-					<div
-						className={`flex-1 overflow-y-auto p-4 transition-all duration-300 ${selectedTask ? 'mr-0 md:mr-[450px]' : ''}`}
-					>
-						{viewMode === 'dashboard' && (
-							<div className='space-y-6'>
-								<StatsDashboard tasks={tasks} projects={projects} />
-								<div className='border-t border-gray-700 pt-6'>
-									<h3 className='text-lg font-bold text-white mb-4'>
-										Список всех задач
-									</h3>
-									<QuickAddForm projects={projects} onAdd={addTask} />
-									<GroupedTasksTable
-										tasks={tasks}
-										projects={projects}
-										onToggle={toggleTask}
-										onDelete={deleteTask}
-										onSelect={setSelectedTask}
-										expandedProjects={expandedProjects}
-										expandedTasks={expandedTasks}
-										onToggleProjectExpand={toggleProjectExpand}
-										onToggleTaskExpand={toggleTaskExpand}
-										onUpdateTask={updateTask}
-									/>
-								</div>
-							</div>
-						)}
-						{viewMode === 'calendar' && (
-							<CalendarView
-								tasks={tasks}
-								projects={projects}
-								onClick={setSelectedTask}
-								onAddTask={addTask}
-								activeProjectId={activeProjectId}
-							/>
-						)}
-						{viewMode === 'project' &&
-							activeProjectId &&
-							projects.find(p => p.id === activeProjectId) && (
-								<ProjectView
-									project={projects.find(p => p.id === activeProjectId)}
+				{/* 🔥 ИСПРАВЛЕННЫЙ КОНТЕЙНЕР КОНТЕНТА */}
+				{/* Для финансов убрали p-4, добавили w-full h-full, для остальных оставили p-4 */}
+				<div
+					className={`flex-1 overflow-y-auto transition-all duration-300 ${selectedTask ? 'mr-0 md:mr-[450px]' : ''} ${viewMode === 'finance' ? 'w-full h-full bg-gray-900' : 'p-4'}`}
+				>
+					{viewMode === 'dashboard' && (
+						<div className='space-y-6'>
+							<StatsDashboard tasks={tasks} projects={projects} />
+							<div className='border-t border-gray-700 pt-6'>
+								<h3 className='text-lg font-bold text-white mb-4'>
+									Список всех задач
+								</h3>
+								<QuickAddForm projects={projects} onAdd={addTask} />
+								<GroupedTasksTable
 									tasks={tasks}
-									onAddTask={addTask}
-									onToggleTask={toggleTask}
-									onDeleteTask={deleteTask}
-									onSelectTask={setSelectedTask}
+									projects={projects}
+									onToggle={toggleTask}
+									onDelete={deleteTask}
+									onSelect={setSelectedTask}
+									expandedProjects={expandedProjects}
+									expandedTasks={expandedTasks}
+									onToggleProjectExpand={toggleProjectExpand}
+									onToggleTaskExpand={toggleTaskExpand}
 									onUpdateTask={updateTask}
 								/>
-							)}
-						{viewMode === 'settings' && (
-							<Settings
-								theme={theme}
-								appTheme={appTheme}
-								isCompact={isCompact}
-								onThemeChange={setTheme}
-								onAppThemeChange={setAppTheme}
-								onCompactChange={setIsCompact}
-								onClearData={handleClearAllData}
-								unlockedAchievements={unlockedAchievements}
-								tasks={tasks}
-								projects={projects}
-							/>
-						)}
-					</div>
-
-					{selectedTask && (
-						<div className='absolute top-0 right-0 h-full w-full md:w-[450px] bg-gray-800 shadow-2xl z-20 overflow-hidden'>
-							<TaskDetailPanel
-								task={selectedTask}
-								projects={projects}
-								onClose={() => setSelectedTask(null)}
-								onUpdate={updateTask}
-								onDelete={deleteTask}
-								onToggle={toggleTask}
-							/>
+							</div>
 						</div>
 					)}
+
+					{viewMode === 'calendar' && (
+						<CalendarView
+							tasks={tasks}
+							projects={projects}
+							onClick={setSelectedTask}
+							onAddTask={addTask}
+							activeProjectId={activeProjectId}
+						/>
+					)}
+
+					{viewMode === 'project' &&
+						activeProjectId &&
+						projects.find(p => p.id === activeProjectId) && (
+							<ProjectView
+								project={projects.find(p => p.id === activeProjectId)}
+								tasks={tasks}
+								onAddTask={addTask}
+								onToggleTask={toggleTask}
+								onDeleteTask={deleteTask}
+								onSelectTask={setSelectedTask}
+								onUpdateTask={updateTask}
+							/>
+						)}
+
+					{viewMode === 'settings' && (
+						<Settings
+							theme={theme}
+							appTheme={appTheme}
+							isCompact={isCompact}
+							onThemeChange={setTheme}
+							onAppThemeChange={setAppTheme}
+							onCompactChange={setIsCompact}
+							onClearData={handleClearAllData}
+							unlockedAchievements={unlockedAchievements}
+							tasks={tasks}
+							projects={projects}
+						/>
+					)}
+
+					{/* 🔥 ФИНАНСЫ (БЕЗ ОТСТУПОВ, НА ВЕСЬ ЭКРАН) */}
+					{viewMode === 'finance' && <FinanceView />}
 				</div>
+
+				{selectedTask && (
+					<div className='absolute top-0 right-0 h-full w-full md:w-[450px] bg-gray-800 shadow-2xl z-20 overflow-hidden'>
+						<TaskDetailPanel
+							task={selectedTask}
+							projects={projects}
+							onClose={() => setSelectedTask(null)}
+							onUpdate={updateTask}
+							onDelete={deleteTask}
+							onToggle={toggleTask}
+						/>
+					</div>
+				)}
 			</div>
 
 			{showThemeSelector && (
@@ -535,6 +555,7 @@ function App() {
 	)
 }
 
+// --- ТАБЛИЦА ЗАДАЧ (СОКРАЩЕННАЯ ВЕРСИЯ ДЛЯ ЭКОНОМИИ МЕСТА, ЛОГИКА ТА ЖЕ) ---
 function GroupedTasksTable({
 	tasks,
 	projects,
@@ -569,6 +590,30 @@ function GroupedTasksTable({
 			),
 		}
 		onUpdateTask(updated)
+	}
+
+	const formatDate = dateString => {
+		if (!dateString) return null
+		const date = new Date(dateString)
+		const today = new Date()
+		const isOverdue = date < today
+		const day = date.getDate()
+		const monthNames = [
+			'янв',
+			'фев',
+			'мар',
+			'апр',
+			'май',
+			'июн',
+			'июл',
+			'авг',
+			'сен',
+			'окт',
+			'ноя',
+			'дек',
+		]
+		const month = monthNames[date.getMonth()]
+		return { text: `${day} ${month}`, isOverdue }
 	}
 
 	return (
@@ -619,6 +664,7 @@ function GroupedTasksTable({
 										const isTaskExpanded = expandedTasks[task.id]
 										const hasSubtasks =
 											task.subtasks && task.subtasks.length > 0
+										const deadlineData = formatDate(task.deadline)
 
 										return (
 											<div
@@ -636,7 +682,7 @@ function GroupedTasksTable({
 															</button>
 														)}
 													</div>
-													<div className='col-span-5 flex gap-2 items-center'>
+													<div className='col-span-4 flex gap-2 items-center'>
 														<div
 															onClick={e => {
 																e.stopPropagation()
@@ -659,7 +705,21 @@ function GroupedTasksTable({
 															</span>
 														)}
 													</div>
-													<div className='col-span-2 flex justify-center'>
+													<div className='col-span-3 flex justify-center'>
+														{deadlineData ? (
+															<span
+																className={`text-xs font-medium px-2 py-0.5 rounded-full ${deadlineData.isOverdue && !task.completed ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-gray-700 text-gray-400'}`}
+															>
+																{deadlineData.isOverdue && !task.completed
+																	? '⚠️ '
+																	: '📅 '}
+																{deadlineData.text}
+															</span>
+														) : (
+															<span className='text-xs text-gray-600'>—</span>
+														)}
+													</div>
+													<div className='col-span-1 flex justify-center'>
 														<span
 															className={`flex items-center gap-1 text-xs ${pc}`}
 														>
@@ -675,7 +735,7 @@ function GroupedTasksTable({
 															{task.completed ? '✅' : `+${task.xp}`}
 														</span>
 													</div>
-													<div className='col-span-2 flex justify-end opacity-0 group-hover:opacity-100'>
+													<div className='col-span-1 flex justify-end opacity-0 group-hover:opacity-100'>
 														<button
 															onClick={e => {
 																e.stopPropagation()
