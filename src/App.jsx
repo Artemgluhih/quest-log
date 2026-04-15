@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { DEFAULT_PROJECTS } from './data/projects'
 import { calculateAutoPriority, suggestDifficulty } from './utils/autoPriority'
-import { checkAchievements } from './utils/achievements'
+import { checkAchievements, ACHIEVEMENTS } from './utils/achievements'
 import { supabase } from './supabaseClient'
 
 import {
@@ -59,9 +59,20 @@ function App() {
 	useEffect(() => {
 		document.documentElement.classList.toggle('dark', theme === 'dark')
 		document.documentElement.classList.toggle('compact-mode', isCompact)
-		const THEMES = ['theme-green', 'theme-purple', 'theme-red', 'theme-orange']
+
+		const THEMES = [
+			'theme-green',
+			'theme-purple',
+			'theme-red',
+			'theme-orange',
+			'theme-pink',
+			'theme-cyan',
+			'theme-teal',
+		]
 		THEMES.forEach(t => document.documentElement.classList.remove(t))
-		if (appTheme !== 'default') document.documentElement.classList.add(appTheme)
+		if (appTheme !== 'default') {
+			document.documentElement.classList.add(appTheme)
+		}
 
 		localStorage.setItem('questLog_theme', theme)
 		localStorage.setItem('questLog_appTheme', appTheme)
@@ -148,22 +159,45 @@ function App() {
 
 	useEffect(() => {
 		if (isLoadingDB) return
-		const newAch = checkAchievements(tasks, unlockedAchievements)
-		if (newAch.length > 0) {
-			setUnlockedAchievements(prev => [...prev, ...newAch.map(a => a.id)])
+
+		const stats = {
+			totalTasks: tasks.length,
+			completedTasks: tasks.filter(t => t.completed).length,
+			totalProjects: Object.keys(projects).length,
+			level:
+				Math.floor(
+					tasks
+						.filter(t => t.completed)
+						.reduce((sum, t) => sum + (t.xp || 0), 0) / 100,
+				) + 1,
+			totalXP: tasks
+				.filter(t => t.completed)
+				.reduce((sum, t) => sum + (t.xp || 0), 0),
 		}
-	}, [tasks, unlockedAchievements, isLoadingDB])
+
+		const newAch = checkAchievements(
+			tasks,
+			projects,
+			unlockedAchievements,
+			stats,
+		)
+		if (newAch.length > 0) {
+			setUnlockedAchievements(prev => [...new Set([...prev, ...newAch])])
+			newAch.forEach(achId => {
+				const ach = ACHIEVEMENTS[achId]
+				if (ach) {
+					setTimeout(() => {
+						alert(`🏆 Новое достижение: ${ach.name}!\n${ach.description}`)
+					}, 500)
+				}
+			})
+		}
+	}, [tasks, projects, unlockedAchievements, isLoadingDB])
 
 	const addTask = async newTask => {
-		if (!newTask.projectId) {
-			console.error('❌ Нет projectId')
-			return
-		}
+		if (!newTask.projectId) return
 		const proj = projects.find(p => p.id === newTask.projectId)
-		if (!proj) {
-			console.error('❌ Проект не найден:', newTask.projectId)
-			return
-		}
+		if (!proj) return
 
 		const autoP = calculateAutoPriority(newTask)
 		const diff = suggestDifficulty(newTask.title, newTask.description || '')
@@ -187,10 +221,8 @@ function App() {
 		}
 
 		try {
-			console.log('📤 Отправка в БД:', taskData)
 			await addTaskToDB(taskData)
 			setTasks(prev => [taskData, ...prev])
-			console.log('✅ Задача создана!')
 		} catch (err) {
 			console.error('❌ Ошибка:', err)
 			alert('Не удалось создать задачу: ' + err.message)
@@ -212,7 +244,11 @@ function App() {
 	const toggleTask = async id => {
 		const task = tasks.find(t => t.id === id)
 		if (!task) return
-		const updated = { ...task, completed: !task.completed }
+		const updated = {
+			...task,
+			completed: !task.completed,
+			completedAt: !task.completed ? new Date().toISOString() : null,
+		}
 
 		try {
 			await updateTaskInDB(updated)
@@ -294,7 +330,6 @@ function App() {
 	}
 
 	const handleViewChange = mode => {
-		console.log('🔄 Смена режима:', mode)
 		setViewMode(mode)
 		if (mode !== 'project') setActiveProjectId(null)
 		setSelectedTask(null)
@@ -302,7 +337,6 @@ function App() {
 	}
 
 	const handleOpenSettings = () => {
-		console.log('⚙️ Открытие настроек')
 		setViewMode('settings')
 		setShowSettings(true)
 		setActiveProjectId(null)
@@ -340,7 +374,7 @@ function App() {
 		)
 
 	return (
-		<div className='h-screen bg-gray-900 text-gray-100 flex overflow-hidden transition-colors duration-300'>
+		<div className='h-screen bg-gray-900 dark:bg-gray-900 text-gray-100 dark:text-gray-100 flex overflow-hidden transition-colors duration-300'>
 			{hasOverdue && (
 				<div className='fixed top-0 left-0 right-0 bg-red-600 text-white text-center py-1 text-sm font-bold z-[60] shadow-lg animate-pulse'>
 					⚠️ У вас есть просроченные задачи!
@@ -365,7 +399,7 @@ function App() {
 
 			<div className='flex-1 flex flex-col h-screen overflow-hidden relative'>
 				<header
-					className={`bg-gray-800 border-b border-gray-700 p-4 flex justify-between items-center z-10 shadow-sm ${hasOverdue ? 'mt-7' : ''}`}
+					className={`bg-gray-800 dark:bg-gray-800 border-b border-gray-700 p-4 flex justify-between items-center z-10 shadow-sm ${hasOverdue ? 'mt-7' : ''}`}
 				>
 					<div className='flex items-center'>
 						<button
@@ -374,7 +408,7 @@ function App() {
 						>
 							☰
 						</button>
-						<h2 className='text-xl font-bold text-white'>
+						<h2 className='text-xl font-bold text-white dark:text-white'>
 							{viewMode === 'dashboard' && '📋 Все задачи'}
 							{viewMode === 'calendar' && '📅 Календарь'}
 							{viewMode === 'project' &&
@@ -461,6 +495,8 @@ function App() {
 								onCompactChange={setIsCompact}
 								onClearData={handleClearAllData}
 								unlockedAchievements={unlockedAchievements}
+								tasks={tasks}
+								projects={projects}
 							/>
 						)}
 					</div>
@@ -547,7 +583,7 @@ function GroupedTasksTable({
 				return (
 					<div
 						key={projectId}
-						className='bg-gray-800 rounded-xl border border-gray-700 overflow-hidden'
+						className='bg-gray-800 dark:bg-gray-800 rounded-xl border border-gray-700 overflow-hidden'
 					>
 						<div
 							onClick={() => onToggleProjectExpand(projectId)}
@@ -585,7 +621,10 @@ function GroupedTasksTable({
 											task.subtasks && task.subtasks.length > 0
 
 										return (
-											<div key={task.id} className='bg-gray-800'>
+											<div
+												key={task.id}
+												className='bg-gray-800 dark:bg-gray-800'
+											>
 												<div className='grid grid-cols-12 gap-2 p-3 items-center hover:bg-gray-700/50 transition group'>
 													<div className='col-span-1 flex justify-center'>
 														{hasSubtasks && (
