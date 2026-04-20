@@ -30,4 +30,18 @@ export default defineConfig({
 			},
 		}),
 	],
+	server: {
+		proxy: {
+			'/api/moex': {
+				target: 'https://iss.moex.com',
+				changeOrigin: true,
+				rewrite: path => path.replace(/^\/api\/moex/, ''),
+				configure: proxy => {
+					proxy.on('proxyReq', proxyReq => {
+						proxyReq.setHeader('User-Agent', 'Mozilla/5.0')
+					})
+				},
+			},
+		},
+	},
 })

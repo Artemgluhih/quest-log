@@ -1,32 +1,39 @@
 import { useState } from 'react'
-import { useAssetData } from './hooks/useAssetData'
+import { useFinanceData } from './hooks/useFinanceData'
+import { useAssetData } from './hooks/useAssetData' // ← Добавь этот импорт
 import BalanceTab from './tabs/BalanceTab'
 import TransactionsTab from './tabs/TransactionsTab'
 import MarketTab from './tabs/MarketTab'
 import AssetsTab from './tabs/AssetsTab'
 import InvestmentsTab from './tabs/InvestmentsTab'
+import AddTransactionModal from './ui/AddTransactionModal'
 import AddAssetModal from './ui/AddAssetModal'
 
 export default function FinanceView() {
 	const [activeTab, setActiveTab] = useState('balance')
-	const [showAddModal, setShowAddModal] = useState(false)
+	const [showModal, setShowModal] = useState(false)
+	const [showAddAssetModal, setShowAddAssetModal] = useState(false)
 	const [selectedAsset, setSelectedAsset] = useState(null)
 
-	//  Центральный хук данных (чтобы портфель обновлялся везде)
-	const { assets, addAsset, prices, loading, lastUpdate, removeAsset } =
-		useAssetData()
+	// 🔹 Хук для транзакций
+	const {
+		transactions,
+		totals,
+		categories,
+		loading,
+		addTransaction,
+		deleteTransaction, // ← Теперь берём отсюда!
+	} = useFinanceData()
 
-	// 🔹 Открытие модалки
-	const handleOpenAddModal = asset => {
-		setSelectedAsset(asset)
-		setShowAddModal(true)
-	}
-
-	// 🔹 Сохранение в портфель
-	const handleAddToPortfolio = data => {
-		addAsset(data.code, data.amount, data.buyPrice)
-		setShowAddModal(false)
-	}
+	// 🔹 Хук для активов
+	const {
+		assets,
+		prices,
+		loading: assetsLoading,
+		lastUpdate,
+		addAsset,
+		removeAsset,
+	} = useAssetData()
 
 	const tabs = [
 		{ id: 'balance', name: '💰 Баланс' },
@@ -35,6 +42,18 @@ export default function FinanceView() {
 		{ id: 'assets', name: '💼 Портфель' },
 		{ id: 'investments', name: '🏦 Инвестиции' },
 	]
+
+	// 🔹 Открытие модалки для актива
+	const handleOpenAddAssetModal = asset => {
+		setSelectedAsset(asset)
+		setShowAddAssetModal(true)
+	}
+
+	// 🔹 Сохранение актива
+	const handleAddToPortfolio = data => {
+		addAsset(data.code, data.amount, data.buyPrice)
+		setShowAddAssetModal(false)
+	}
 
 	return (
 		<div className='flex flex-col h-full w-full bg-gray-900 text-white'>
@@ -58,15 +77,20 @@ export default function FinanceView() {
 			{/* Контент */}
 			<div className='flex-1 overflow-y-auto p-6 w-full custom-scrollbar relative'>
 				{activeTab === 'balance' && <BalanceTab />}
-				{activeTab === 'transactions' && <TransactionsTab />}
+				{activeTab === 'transactions' && (
+					<TransactionsTab
+						onAdd={() => setShowModal(true)}
+						onDelete={deleteTransaction} // ← Теперь это определено!
+					/>
+				)}
 				{activeTab === 'market' && (
-					<MarketTab onAddToPortfolio={handleOpenAddModal} />
+					<MarketTab onAddToPortfolio={handleOpenAddAssetModal} />
 				)}
 				{activeTab === 'assets' && (
 					<AssetsTab
 						assets={assets}
 						prices={prices}
-						loading={loading}
+						loading={assetsLoading}
 						lastUpdate={lastUpdate}
 						addAsset={addAsset}
 						removeAsset={removeAsset}
@@ -75,11 +99,22 @@ export default function FinanceView() {
 				{activeTab === 'investments' && <InvestmentsTab />}
 			</div>
 
-			{/* Модалка добавления */}
-			{showAddModal && (
+			{/* Модалка для транзакций */}
+			{showModal && (
+				<AddTransactionModal
+					onClose={() => setShowModal(false)}
+					onSave={tx => {
+						addTransaction(tx)
+						setShowModal(false)
+					}}
+				/>
+			)}
+
+			{/* Модалка для активов */}
+			{showAddAssetModal && (
 				<AddAssetModal
 					asset={selectedAsset}
-					onClose={() => setShowAddModal(false)}
+					onClose={() => setShowAddAssetModal(false)}
 					onAdd={handleAddToPortfolio}
 				/>
 			)}
