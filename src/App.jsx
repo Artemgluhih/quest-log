@@ -26,6 +26,7 @@ import Achievements from './components/Achievements'
 import LoginScreen from './components/LoginScreen'
 import Settings from './components/Settings'
 import FinanceView from './components/finance/FinanceView'
+import AssistantView from './components/AssistantView'
 
 function App() {
 	const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -410,7 +411,6 @@ function App() {
 			/>
 
 			<div className='flex-1 flex flex-col h-screen overflow-hidden relative'>
-				{/* 🔥 ШАПКА С ВОССТАНОВЛЕННЫМ ЗАГОЛОВКОМ ФИНАНСОВ */}
 				<header
 					className={`bg-gray-800 dark:bg-gray-800 border-b border-gray-700 p-4 flex justify-between items-center z-10 shadow-sm ${hasOverdue ? 'mt-7' : ''}`}
 				>
@@ -432,6 +432,7 @@ function App() {
 								: ''}
 							{viewMode === 'settings' && '⚙️ Настройки'}
 							{viewMode === 'finance' && '💰 Финансы'}
+							{viewMode === 'assistant' && '🤖 AI Ассистент'}
 						</h2>
 					</div>
 
@@ -450,10 +451,8 @@ function App() {
 					</div>
 				</header>
 
-				{/* 🔥 ИСПРАВЛЕННЫЙ КОНТЕЙНЕР КОНТЕНТА */}
-				{/* Для финансов убрали p-4, добавили w-full h-full, для остальных оставили p-4 */}
 				<div
-					className={`flex-1 overflow-y-auto transition-all duration-300 ${selectedTask ? 'mr-0 md:mr-[450px]' : ''} ${viewMode === 'finance' ? 'w-full h-full bg-gray-900' : 'p-4'}`}
+					className={`flex-1 overflow-y-auto transition-all duration-300 ${selectedTask ? 'mr-0 md:mr-[450px]' : ''} ${viewMode === 'finance' || viewMode === 'assistant' ? 'w-full h-full bg-gray-900' : 'p-4'}`}
 				>
 					{viewMode === 'dashboard' && (
 						<div className='space-y-6'>
@@ -520,6 +519,9 @@ function App() {
 
 					{/* 🔥 ФИНАНСЫ (БЕЗ ОТСТУПОВ, НА ВЕСЬ ЭКРАН) */}
 					{viewMode === 'finance' && <FinanceView />}
+
+					{/* 🔥 AI АССИСТЕНТ (БЕЗ ОТСТУПОВ, НА ВЕСЬ ЭКРАН) */}
+					{viewMode === 'assistant' && <AssistantView tasks={tasks} />}
 				</div>
 
 				{selectedTask && (
@@ -555,7 +557,7 @@ function App() {
 	)
 }
 
-// --- ТАБЛИЦА ЗАДАЧ (СОКРАЩЕННАЯ ВЕРСИЯ ДЛЯ ЭКОНОМИИ МЕСТА, ЛОГИКА ТА ЖЕ) ---
+// --- ТАБЛИЦА ЗАДАЧ (СОКРАЩЕННАЯ ВЕРСИЯ) ---
 function GroupedTasksTable({
 	tasks,
 	projects,
